@@ -34,12 +34,19 @@ public class Client {
             out.flush();
             System.out.println("Sent: REDY");
 
+            // read first job
+            String msg = "";
+
+            while (true) {
+                msg = in.readLine();
+                System.out.println("Recieved: " + msg);
+                break;
+            }
+
             // NOT READY TO RECIEVE JOBS YET
             // quit
             out.write(("QUIT\n").getBytes());
             out.flush();
-
-            String msg = "";
 
             while (true) {
                 msg = in.readLine();
