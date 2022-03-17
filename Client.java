@@ -29,15 +29,15 @@ public class Client {
             // get server info
             // DO NEXT WEEK
 
+            // send REDY when ready to start reading jobs
+            out.write(("REDY\n").getBytes());
+            out.flush();
+            System.out.println("Sent: REDY");
+
             // NOT READY TO RECIEVE JOBS YET
             // quit
             out.write(("QUIT\n").getBytes());
             out.flush();
-
-            // send REDY when ready to start reading jobs
-            // out.write(("REDY\n").getBytes());
-            // out.flush();
-            // System.out.println("Sent: REDY");
 
             String msg = "";
 
