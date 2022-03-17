@@ -35,19 +35,17 @@ public class Client {
             out.flush();
 
             // send REDY when ready to start reading jobs
-            /*
-             * out.write(("REDY\n").getBytes());
-             * out.flush();
-             * System.out.println("Sent: REDY");
-             * 
-             * String msg = "";
-             * 
-             * while (true) {
-             * msg = in.readLine();
-             * System.out.println("Recieved: " + msg);
-             * break;
-             * }
-             */
+            // out.write(("REDY\n").getBytes());
+            // out.flush();
+            // System.out.println("Sent: REDY");
+
+            String msg = "";
+
+            while (true) {
+                msg = in.readLine();
+                System.out.println("Recieved: " + msg);
+                break;
+            }
 
             out.close();
             socket.close();
