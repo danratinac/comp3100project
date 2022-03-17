@@ -4,8 +4,8 @@ import java.net.*;
 public class Server {
 
     public static void main(String[] args) {
-        try{
-            ServerSocket serverSocket = new ServerSocket(1234);
+        try {
+            ServerSocket serverSocket = new ServerSocket(50000);
             Socket socket = serverSocket.accept();
 
             DataInputStream in = new DataInputStream(socket.getInputStream());
@@ -28,12 +28,12 @@ public class Server {
                     break;
                 }
             }
-            
+
             in.close();
             socket.close();
             serverSocket.close();
-            
-        } catch(Exception e) {
+
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
