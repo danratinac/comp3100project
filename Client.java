@@ -1,7 +1,13 @@
 import java.io.*;
 import java.net.*;
 
+import Utilities.JobInfo;
+import Utilities.ServerInfo;
+
 public class Client {
+
+    private static JobInfo currentJob;
+    private static ServerInfo[] servers;
 
     public static void main(String[] args) {
         try {
@@ -26,9 +32,6 @@ public class Client {
             // wait for OK from server
             waitFor("OK", in);
 
-            // get server info
-            // DO NEXT WEEK
-
             // send REDY when ready to start reading jobs
             out.write(("REDY\n").getBytes());
             out.flush();
@@ -36,23 +39,40 @@ public class Client {
 
             // read first job
             String msg = "";
+            msg = in.readLine();
+            System.out.println("Recieved: " + msg);
+            currentJob = extractJobInfo(msg);
 
-            while (true) {
+            // request server info
+            out.write(("GETS All\n").getBytes());
+            out.flush();
+            System.out.println("Sent: GETS All");
+
+            // get reply and initialise info array
+            msg = in.readLine();
+            System.out.println("Recieved: " + msg);
+            String[] info = msg.split(" ");
+            servers = new ServerInfo[Integer.valueOf(info[1])];
+
+            // send OK
+            out.write(("OK\n").getBytes());
+            out.flush();
+            System.out.println("Sent: OK");
+
+            // save server info
+            for (ServerInfo server : servers) {
                 msg = in.readLine();
-                System.out.println("Recieved: " + msg);
-                break;
+                info = msg.split(" ");
+                server = new ServerInfo(info[0], info[1], info[4], info[5], info[6], info[7], info[8]);
+                System.out.println(server.toString());
             }
 
-            // NOT READY TO RECIEVE JOBS YET
             // quit
             out.write(("QUIT\n").getBytes());
             out.flush();
 
-            while (true) {
-                msg = in.readLine();
-                System.out.println("Recieved: " + msg);
-                break;
-            }
+            msg = in.readLine();
+            System.out.println("Recieved: " + msg);
 
             out.close();
             socket.close();
@@ -63,12 +83,22 @@ public class Client {
     }
 
     private static void waitFor(String msg, BufferedReader in) {
+        String input = "";
         try {
-            String input = in.readLine();
-            while (!input.equals(msg)) {
+            while (true) {
+                if (!input.equals(msg))
+                    input = in.readLine();
+                else
+                    break;
             }
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    private static JobInfo extractJobInfo(String msg) {
+        String[] info = msg.split(" ");
+        JobInfo job = new JobInfo(info[1], info[2], info[3], info[4], info[5], info[6]);
+        return job;
     }
 }
