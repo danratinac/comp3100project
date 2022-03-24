@@ -72,6 +72,30 @@ public class Client {
             out.flush();
             System.out.println("Sent: OK");
 
+            // schedule first job
+            int largest = getLargestServer();
+            out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
+                    .getBytes());
+            out.flush();
+
+            // wait for OK
+            waitFor("OK", in);
+
+            // schedule rest of jobs
+            while (true) {
+                out.write(("REDY\n").getBytes());
+                out.flush();
+                msg = in.readLine();
+                if (msg.equals("NONE"))
+                    break;
+                largest = getLargestServer();
+                out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
+                        .getBytes());
+                out.flush();
+
+                waitFor("OK", in);
+            }
+
             // quit
             out.write(("QUIT\n").getBytes());
             out.flush();
@@ -105,5 +129,25 @@ public class Client {
         String[] info = msg.split(" ");
         JobInfo job = new JobInfo(info[1], info[2], info[3], info[4], info[5], info[6]);
         return job;
+    }
+
+    private static JobInfo getNextJob(BufferedReader in) {
+        JobInfo info = null;
+        try {
+            String msg = in.readLine();
+            extractJobInfo(msg);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return info;
+    }
+
+    private static int getLargestServer() {
+        int largestIndex = 0;
+        for (int i = 0; i < servers.length; i++) {
+            if (servers[i].cores > servers[largestIndex].cores)
+                largestIndex = i;
+        }
+        return largestIndex;
     }
 }
