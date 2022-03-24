@@ -67,6 +67,7 @@ public class Client {
 
             }
 
+            // print server info
             for (ServerInfo server : servers) {
                 System.out.println(server.toString());
             }
@@ -148,8 +149,6 @@ public class Client {
 
     private static int getLargestServer() {
         int largestIndex = 0;
-        System.out.println("Length: " + servers.length);
-        System.out.println("Server 0: " + servers[largestIndex]);
         for (int i = 0; i < servers.length; i++) {
             if (servers[i].cores > servers[largestIndex].cores)
                 largestIndex = i;
