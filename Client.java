@@ -145,9 +145,8 @@ public class Client {
     private static int getLargestServer() {
         int largestIndex = 0;
         System.out.println("Length: " + servers.length);
+        System.out.println("Server 0: " + servers[largestIndex]);
         for (int i = 0; i < servers.length; i++) {
-            System.out.println("Largest: " + largestIndex);
-            System.out.println(i);
             if (servers[i].cores > servers[largestIndex].cores)
                 largestIndex = i;
         }
