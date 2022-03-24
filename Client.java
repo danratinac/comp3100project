@@ -64,6 +64,10 @@ public class Client {
                 msg = in.readLine();
                 info = msg.split(" ");
                 server = new ServerInfo(info[0], info[1], info[4], info[5], info[6], info[7], info[8]);
+
+            }
+
+            for (ServerInfo server : servers) {
                 System.out.println(server.toString());
             }
 
