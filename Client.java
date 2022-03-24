@@ -67,6 +67,11 @@ public class Client {
                 System.out.println(server.toString());
             }
 
+            // send OK
+            out.write(("OK\n").getBytes());
+            out.flush();
+            System.out.println("Sent: OK");
+
             // quit
             out.write(("QUIT\n").getBytes());
             out.flush();
