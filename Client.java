@@ -74,8 +74,6 @@ public class Client {
 
             // schedule first job
             int largest = getLargestServer();
-            System.out.println("Largest: " + largest);
-            System.out.println("Length: " + servers.length);
             out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
                     .getBytes());
             out.flush();
@@ -146,9 +144,11 @@ public class Client {
 
     private static int getLargestServer() {
         int largestIndex = 0;
+        System.out.println("Length: " + servers.length);
         for (int i = 0; i < servers.length; i++) {
             if (servers[i].cores > servers[largestIndex].cores)
                 largestIndex = i;
+            System.out.println("Largest: " + largestIndex);
         }
         return largestIndex;
     }
