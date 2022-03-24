@@ -60,10 +60,10 @@ public class Client {
             System.out.println("Sent: OK");
 
             // save server info
-            for (ServerInfo server : servers) {
+            for (int i = 0; i < servers.length; i++) {
                 msg = in.readLine();
                 info = msg.split(" ");
-                server = new ServerInfo(info[0], info[1], info[4], info[5], info[6], info[7], info[8]);
+                servers[i] = new ServerInfo(info[0], info[1], info[4], info[5], info[6], info[7], info[8]);
 
             }
 
