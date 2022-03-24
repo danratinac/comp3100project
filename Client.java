@@ -74,6 +74,8 @@ public class Client {
 
             // schedule first job
             int largest = getLargestServer();
+            System.out.println("Largest: " + largest);
+            System.out.println("Length: " + servers.length);
             out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
                     .getBytes());
             out.flush();
