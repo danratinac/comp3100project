@@ -92,6 +92,7 @@ public class Client {
                 msg = in.readLine();
                 if (msg.equals("NONE"))
                     break;
+                currentJob = extractJobInfo(msg);
                 largest = getLargestServer();
                 out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
                         .getBytes());
