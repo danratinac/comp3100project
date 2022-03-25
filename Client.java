@@ -64,7 +64,6 @@ public class Client {
                 msg = in.readLine();
                 info = msg.split(" ");
                 servers[i] = new ServerInfo(info[0], info[1], info[4], info[5], info[6], info[7], info[8]);
-
             }
 
             // print server info
@@ -134,17 +133,6 @@ public class Client {
         String[] info = msg.split(" ");
         JobInfo job = new JobInfo(info[1], info[2], info[3], info[4], info[5], info[6]);
         return job;
-    }
-
-    private static JobInfo getNextJob(BufferedReader in) {
-        JobInfo info = null;
-        try {
-            String msg = in.readLine();
-            extractJobInfo(msg);
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-        return info;
     }
 
     private static int getLargestServer() {
