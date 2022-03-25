@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import Utilities.JobInfo;
 import Utilities.ServerInfo;
@@ -8,6 +10,8 @@ public class Client {
 
     private static JobInfo currentJob;
     private static ServerInfo[] servers;
+    private static List<ServerInfo> largestServers = new ArrayList<ServerInfo>();
+    private static int currentServer = 0;
 
     public static void main(String[] args) {
         try {
@@ -76,11 +80,11 @@ public class Client {
             out.flush();
             System.out.println("Sent: OK");
 
+            // get list of largest servers for use in scheduling
+            largestServers = getLargestServers();
+
             // schedule first job
-            int largest = getLargestServer();
-            out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
-                    .getBytes());
-            out.flush();
+            scheduleJob(out);
 
             // wait for OK
             waitFor("OK", in);
@@ -96,18 +100,19 @@ public class Client {
                 // send REDY for next info
                 out.write(("REDY\n").getBytes());
                 out.flush();
+                
                 // get server's reply
                 msg = in.readLine();
-                command = msg.substring(0, 4).trim();
+                System.out.println("Recieved: " + msg);
+
+                // set command so we can check how to handle reply
+                command = msg.substring(0, 3);
 
                 // perform appropriate action based on server reply
                 switch (command) {
                     case "JOBN":
                         currentJob = extractJobInfo(msg);
-                        largest = getLargestServer();
-                        out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
-                                .getBytes());
-                        out.flush();
+                        scheduleJob(out);
         
                         waitFor("OK", in);
                         break;
@@ -154,12 +159,34 @@ public class Client {
         return job;
     }
 
-    private static int getLargestServer() {
+    private static ArrayList<ServerInfo> getLargestServers() {
         int largestIndex = 0;
-        for (int i = 0; i < servers.length; i++) {
+        for(int i = 0; i < servers.length; i++) {
             if (servers[i].cores > servers[largestIndex].cores)
                 largestIndex = i;
         }
-        return largestIndex;
+        String largestType = servers[largestIndex].type;
+        ArrayList<ServerInfo> largest = new ArrayList<ServerInfo>();
+        for(ServerInfo server : servers) {
+            if(server.type.equals(largestType)) largest.add(server);
+        }
+        return largest;
+    }
+
+    private static void scheduleJob(DataOutputStream out) {
+        try {
+            // send scheduling request
+            String msg = "SCHD " + currentJob.id + " " + largestServers.get(currentServer).type + " " + largestServers.get(currentServer).id;
+            out.write((msg + "\n").getBytes());
+            out.flush();
+
+            // move to next server for lrr scheduling
+            if(currentServer == largestServers.size() - 1) currentServer = 0;
+            else currentServer++;
+
+            System.out.println("Sent: " + msg);
+        } catch(Exception e) {
+            System.out.println(e);
+        }
     }
 }
