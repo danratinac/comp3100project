@@ -98,12 +98,13 @@ public class Client {
 
             // schedule rest of jobs
             while (moreJobs) {
+                // space console output for readability
+                System.out.println();
+
                 // send REDY for next info
                 out.write(("REDY\n").getBytes());
                 out.flush();
-
-                // space console output for readability
-                System.out.println();
+                System.out.println("Sent: REDY");
 
                 // get server's reply
                 msg = in.readLine();
@@ -131,6 +132,7 @@ public class Client {
             // quit
             out.write(("QUIT\n").getBytes());
             out.flush();
+            System.out.println("Sent: QUIT");
 
             msg = in.readLine();
             System.out.println("Recieved: " + msg);
