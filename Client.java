@@ -100,13 +100,14 @@ public class Client {
                 // send REDY for next info
                 out.write(("REDY\n").getBytes());
                 out.flush();
-                
+
                 // get server's reply
                 msg = in.readLine();
                 System.out.println("Recieved: " + msg);
 
                 // set command so we can check how to handle reply
                 command = msg.substring(0, 3);
+                System.out.println("Command: " + command);
 
                 // perform appropriate action based on server reply
                 switch (command) {
