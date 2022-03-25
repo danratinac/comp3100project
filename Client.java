@@ -106,7 +106,7 @@ public class Client {
                 System.out.println("Recieved: " + msg);
 
                 // set command so we can check how to handle reply
-                command = msg.substring(0, 3);
+                command = msg.substring(0, 4);
                 System.out.println("Command: " + command);
 
                 // perform appropriate action based on server reply
