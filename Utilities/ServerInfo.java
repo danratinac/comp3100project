@@ -21,7 +21,7 @@ public class ServerInfo {
     }
 
     public String toString() {
-        return type + id + String.valueOf(cores) + String.valueOf(memory) + String.valueOf(disk)
-                + String.valueOf(waitingJobs) + String.valueOf(runningJobs);
+        return type + " " + id + " " + String.valueOf(cores) + " " + String.valueOf(memory) + " " + String.valueOf(disk)
+            + " " + String.valueOf(waitingJobs) + " " + String.valueOf(runningJobs);
     }
 }

@@ -74,6 +74,7 @@ public class Client {
             for (ServerInfo server : servers) {
                 System.out.println(server.toString());
             }
+            System.out.println();
 
             // send OK
             out.write(("OK\n").getBytes());
@@ -101,13 +102,15 @@ public class Client {
                 out.write(("REDY\n").getBytes());
                 out.flush();
 
+                // space console output for readability
+                System.out.println();
+
                 // get server's reply
                 msg = in.readLine();
                 System.out.println("Recieved: " + msg);
 
                 // set command so we can check how to handle reply
                 command = msg.substring(0, 4);
-                System.out.println("Command: " + command);
 
                 // perform appropriate action based on server reply
                 switch (command) {
@@ -143,12 +146,10 @@ public class Client {
     private static void waitFor(String msg, BufferedReader in) {
         String input = "";
         try {
-            while (true) {
-                if (!input.equals(msg))
-                    input = in.readLine();
-                else
-                    break;
+            while (!input.equals(msg)) {
+                input = in.readLine();
             }
+            System.out.println("Recieved: " + input);
         } catch (Exception e) {
             System.out.println(e);
         }
