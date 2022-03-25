@@ -85,20 +85,38 @@ public class Client {
             // wait for OK
             waitFor("OK", in);
 
+            // used for switching based on what the server's reply to REDY is
+            String command;
+
+            // used to break out of loop if no more jobs remain
+            Boolean moreJobs = true;
+
             // schedule rest of jobs
-            while (true) {
+            while (moreJobs) {
+                // send REDY for next info
                 out.write(("REDY\n").getBytes());
                 out.flush();
+                // get server's reply
                 msg = in.readLine();
-                if (msg.equals("NONE"))
-                    break;
-                currentJob = extractJobInfo(msg);
-                largest = getLargestServer();
-                out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
-                        .getBytes());
-                out.flush();
+                command = msg.substring(0, 4).trim();
 
-                waitFor("OK", in);
+                // perform appropriate action based on server reply
+                switch (command) {
+                    case "JOBN":
+                        currentJob = extractJobInfo(msg);
+                        largest = getLargestServer();
+                        out.write(("SCHD " + currentJob.id + " " + servers[largest].type + " " + servers[largest].id + "\n")
+                                .getBytes());
+                        out.flush();
+        
+                        waitFor("OK", in);
+                        break;
+                    case "NONE":
+                        moreJobs = false;
+                        break;
+                    default:
+                        break;
+                }
             }
 
             // quit
