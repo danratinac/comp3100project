@@ -29,7 +29,7 @@ public class Client {
             waitFor("OK", in);
 
             // send AUTH and authentication info to server
-            out.write(("AUTH" + System.getProperty("user.name") + "\n").getBytes());
+            out.write(("AUTH" + " " + System.getProperty("user.name") + "\n").getBytes());
             out.flush();
             System.out.println("Sent: AUTH");
 
