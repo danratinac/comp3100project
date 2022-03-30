@@ -8,15 +8,20 @@ import Utilities.ServerInfo;
 
 public class Client {
 
-    private static JobInfo currentJob;
-    private static ServerInfo[] servers;
-    private static List<ServerInfo> largestServers = new ArrayList<ServerInfo>();
-    private static int currentServer = 0;
+    private static JobInfo currentJob; // stores info on the current job that requires scheduling
+    private static int currentServer = 0; // stores the index of the server that should receive the next job scheduled
+
+    private static ServerInfo[] servers; // stores the hardware information of all the servers as sent by ds-server
+    private static List<ServerInfo> largestServers = new ArrayList<ServerInfo>(); // a list of all servers of the largest type
+
+    private static final int DEFAULT_PORT = 50000;
 
     public static void main(String[] args) {
         try {
-            Socket socket = new Socket("localhost", 50000);
+            // open the socket used to connect to the server
+            Socket socket = new Socket("localhost", DEFAULT_PORT);
 
+            // initialise for input and output
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
@@ -63,7 +68,7 @@ public class Client {
             out.flush();
             System.out.println("Sent: OK");
 
-            // save server info
+            // store server info
             for (int i = 0; i < servers.length; i++) {
                 msg = in.readLine();
                 info = msg.split(" ");
@@ -96,7 +101,7 @@ public class Client {
             // used to break out of loop if no more jobs remain
             Boolean moreJobs = true;
 
-            // schedule rest of jobs
+            // main loop, handles all messages from the server from now on
             while (moreJobs) {
                 // space console output for readability
                 System.out.println();
@@ -116,12 +121,14 @@ public class Client {
                 // perform appropriate action based on server reply
                 switch (command) {
                     case "JOBN":
+                        // schedule the job
                         currentJob = extractJobInfo(msg);
                         scheduleJob(out);
         
                         waitFor("OK", in);
                         break;
                     case "NONE":
+                        // there are no more jobs so stop the loop
                         moreJobs = false;
                         break;
                     default:
@@ -145,6 +152,7 @@ public class Client {
 
     }
 
+    // waits until the specified message is received
     private static void waitFor(String msg, BufferedReader in) {
         String input = "";
         try {
@@ -157,18 +165,22 @@ public class Client {
         }
     }
 
+    // extracts job info in useable format from a ds-server JOBN message
     private static JobInfo extractJobInfo(String msg) {
         String[] info = msg.split(" ");
         JobInfo job = new JobInfo(info[1], info[2], info[3], info[4], info[5], info[6]);
         return job;
     }
 
+    // returns a list of all servers that are of the type with most CPU cores
     private static ArrayList<ServerInfo> getLargestServers() {
         int largestIndex = 0;
+        // determine which server type has the most CPU cores; if more than one, take the first
         for(int i = 0; i < servers.length; i++) {
             if (servers[i].cores > servers[largestIndex].cores)
                 largestIndex = i;
         }
+        // add all servers of the largest type to the largestType list
         String largestType = servers[largestIndex].type;
         ArrayList<ServerInfo> largest = new ArrayList<ServerInfo>();
         for(ServerInfo server : servers) {
@@ -177,6 +189,7 @@ public class Client {
         return largest;
     }
 
+    // schedules jobs according a largest round robin algorithm
     private static void scheduleJob(DataOutputStream out) {
         try {
             // send scheduling request

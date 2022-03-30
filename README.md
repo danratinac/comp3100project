@@ -9,4 +9,3 @@ For the client to function properly:
 3. In the first terminal, type _"java Client"_ to run the client
 ## Important Notes
 - The file structure for the client must be kept intact; e.g. if you wish to move the client to a different folder, you must also take the entire utilities folder with it or the client will crash when run
-- The **Server.java** file included in the repository is currently unused and contains demo code for a local Java server simulation that will **not** work with the current client; it will be removed at a later date if not required in Stage 2 of the project
