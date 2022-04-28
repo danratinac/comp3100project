@@ -3,6 +3,8 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.plaf.synth.SynthSeparatorUI;
+
 import Utilities.JobInfo;
 import Utilities.ServerInfo;
 
@@ -233,6 +235,8 @@ public class Client {
     private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
         try {
             // get first capable server
+            System.out.println("Current job " + currentJob.reqCores + " " + currentJob.reqMem + " "
+                    + currentJob.reqDisk);
             String msg = "GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
                     + currentJob.reqDisk;
             out.write((msg + "\n").getBytes());
