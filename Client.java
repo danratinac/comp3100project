@@ -19,6 +19,8 @@ public class Client {
 
     public static void main(String[] args) {
         try {
+            System.out.println(args);
+
             // open the socket used to connect to the server
             Socket socket = new Socket("localhost", DEFAULT_PORT);
 
@@ -126,7 +128,7 @@ public class Client {
                         currentJob = extractJobInfo(msg);
 
                         switch (args[1]) {
-                            case "-fc":
+                            case "fc":
                                 scheduleJobFc(in, out);
                                 break;
                             default:
