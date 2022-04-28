@@ -188,7 +188,6 @@ public class Client {
     // extracts job info in useable format from a ds-server JOBN message
     private static JobInfo extractJobInfo(String msg) {
         String[] info = msg.split(" ");
-        System.out.println("Stripping cores: " + info[4]);
         JobInfo job = new JobInfo(info[1], info[2], info[3], info[4], info[5], info[6]);
         return job;
     }
@@ -236,8 +235,6 @@ public class Client {
     private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
         try {
             // get first capable server
-            System.out.println("Current job " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                    + currentJob.reqDisk);
             String msg = "GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
                     + currentJob.reqDisk;
             out.write((msg + "\n").getBytes());

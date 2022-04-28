@@ -12,7 +12,7 @@ public class JobInfo {
         receivedTime = Integer.valueOf(time);
         id = idIn;
         estRunTime = Integer.valueOf(runTime);
-        reqCores = Integer.valueOf(reqCores);
+        reqCores = Integer.valueOf(cores);
         reqMem = Integer.valueOf(mem);
         reqDisk = Integer.valueOf(disk);
     }
