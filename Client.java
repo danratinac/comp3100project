@@ -253,7 +253,7 @@ public class Client {
 
             // get server info
             String[] capableInfo = in.readLine().split(" ");
-            System.out.println("First capable: " + capableInfo[1] + capableInfo[2]);
+            System.out.println("First capable: " + capableInfo[0] + capableInfo[1]);
 
             // send OK
             out.write(("OK\n").getBytes());
@@ -261,7 +261,7 @@ public class Client {
             System.out.println("Sent: OK");
 
             // send scheduling request
-            msg = "SCHD " + currentJob.id + " " + capableInfo[1] + " " + capableInfo[2];
+            msg = "SCHD " + currentJob.id + " " + capableInfo[0] + " " + capableInfo[1];
             out.write((msg + "\n").getBytes());
             out.flush();
 
