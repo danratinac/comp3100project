@@ -12,7 +12,8 @@ public class Client {
     private static int currentServer = 0; // stores the index of the server that should receive the next job scheduled
 
     private static ServerInfo[] servers; // stores the hardware information of all the servers as sent by ds-server
-    private static List<ServerInfo> largestServers = new ArrayList<ServerInfo>(); // a list of all servers of the largest type
+    private static List<ServerInfo> largestServers = new ArrayList<ServerInfo>(); // a list of all servers of the
+                                                                                  // largest type
 
     private static final int DEFAULT_PORT = 50000;
 
@@ -90,7 +91,7 @@ public class Client {
             largestServers = getLargestServers();
 
             // schedule first job
-            scheduleJob(out);
+            scheduleJobLrr(out);
 
             // wait for OK
             waitFor("OK", in);
@@ -123,8 +124,16 @@ public class Client {
                     case "JOBN":
                         // schedule the job
                         currentJob = extractJobInfo(msg);
-                        scheduleJob(out);
-        
+
+                        switch (args[1]) {
+                            case "-fc":
+                                scheduleJobFc(in, out);
+                                break;
+                            default:
+                                scheduleJobLrr(out);
+                                break;
+                        }
+
                         waitFor("OK", in);
                         break;
                     case "NONE":
@@ -175,34 +184,74 @@ public class Client {
     // returns a list of all servers that are of the type with most CPU cores
     private static ArrayList<ServerInfo> getLargestServers() {
         int largestIndex = 0;
-        // determine which server type has the most CPU cores; if more than one, take the first
-        for(int i = 0; i < servers.length; i++) {
+        // determine which server type has the most CPU cores; if more than one, take
+        // the first
+        for (int i = 0; i < servers.length; i++) {
             if (servers[i].cores > servers[largestIndex].cores)
                 largestIndex = i;
         }
         // add all servers of the largest type to the largestType list
         String largestType = servers[largestIndex].type;
         ArrayList<ServerInfo> largest = new ArrayList<ServerInfo>();
-        for(ServerInfo server : servers) {
-            if(server.type.equals(largestType)) largest.add(server);
+        for (ServerInfo server : servers) {
+            if (server.type.equals(largestType))
+                largest.add(server);
         }
         return largest;
     }
 
     // schedules jobs according a largest round robin algorithm
-    private static void scheduleJob(DataOutputStream out) {
+    private static void scheduleJobLrr(DataOutputStream out) {
         try {
             // send scheduling request
-            String msg = "SCHD " + currentJob.id + " " + largestServers.get(currentServer).type + " " + largestServers.get(currentServer).id;
+            String msg = "SCHD " + currentJob.id + " " + largestServers.get(currentServer).type + " "
+                    + largestServers.get(currentServer).id;
             out.write((msg + "\n").getBytes());
             out.flush();
 
             // move to next server for lrr scheduling
-            if(currentServer == largestServers.size() - 1) currentServer = 0;
-            else currentServer++;
+            if (currentServer == largestServers.size() - 1)
+                currentServer = 0;
+            else
+                currentServer++;
 
             System.out.println("Sent: " + msg);
-        } catch(Exception e) {
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
+        try {
+            // get first capable server
+            String msg = "GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
+                    + currentJob.reqDisk;
+            out.write((msg + "\n").getBytes());
+            out.flush();
+
+            System.out.println("Sent: " + msg);
+
+            // get data and discard, we don't need any of the info it contains
+            in.readLine();
+            out.write(("OK\n").getBytes());
+            out.flush();
+            System.out.println("Sent: OK");
+
+            // get server info
+            String[] capableInfo = in.readLine().split(" ");
+
+            // send OK
+            out.write(("OK\n").getBytes());
+            out.flush();
+            System.out.println("Sent: OK");
+
+            // send scheduling request
+            msg = "SCHD " + currentJob.id + " " + capableInfo[1] + " " + capableInfo[2];
+            out.write((msg + "\n").getBytes());
+            out.flush();
+
+            System.out.println("Sent: " + msg);
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
