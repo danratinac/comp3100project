@@ -127,7 +127,7 @@ public class Client {
                         // schedule the job
                         currentJob = extractJobInfo(msg);
 
-                        switch (args[1]) {
+                        switch (args[0]) {
                             case "fc":
                                 scheduleJobFc(in, out);
                                 break;
