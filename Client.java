@@ -93,7 +93,14 @@ public class Client {
             largestServers = getLargestServers();
 
             // schedule first job
-            scheduleJobLrr(out);
+            switch (args[0]) {
+                case "fc":
+                    scheduleJobFc(in, out);
+                    break;
+                default:
+                    scheduleJobLrr(out);
+                    break;
+            }
 
             // wait for OK
             waitFor("OK", in);
@@ -234,13 +241,14 @@ public class Client {
             System.out.println("Sent: " + msg);
 
             // get data and discard, we don't need any of the info it contains
-            in.readLine();
+            System.out.println("Recieved: " + in.readLine());
             out.write(("OK\n").getBytes());
             out.flush();
             System.out.println("Sent: OK");
 
             // get server info
             String[] capableInfo = in.readLine().split(" ");
+            System.out.println("First capable: " + capableInfo[1] + capableInfo[2]);
 
             // send OK
             out.write(("OK\n").getBytes());
