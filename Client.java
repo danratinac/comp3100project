@@ -91,6 +91,9 @@ public class Client {
             out.flush();
             System.out.println("Sent: OK");
 
+            // wait for .
+            waitFor(".", in);
+
             // get list of largest servers for use in scheduling
             largestServers = getLargestServers();
 
