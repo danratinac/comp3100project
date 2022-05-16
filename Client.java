@@ -310,6 +310,11 @@ public class Client {
             // get info on first available server
             String rply = in.readLine();
 
+            // send OK
+            out.write(("OK\n").getBytes());
+            out.flush();
+            System.out.println("Sent: OK");
+
             // if there are servers with the required resources available, schedule to the first one
             if (!rply.equals(".")) {
                 // get first available server
@@ -345,6 +350,11 @@ public class Client {
                 for (int i = 0; i < capServers.length; i++) {
                    capServers[i] = extractServerInfo(in.readLine());
                 }
+
+                // send OK
+                out.write(("OK\n").getBytes());
+                out.flush();
+                System.out.println("Sent: OK");
 
                 // find the first capable server with an estimated runtime under the threshold
                 int index = 0;
