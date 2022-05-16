@@ -27,7 +27,7 @@ public class Client {
     public static void main(String[] args) {
         try {
             // set args to avoid null issues with later switch statements
-            if (args == null) {
+            if (args.length == 0) {
                 args = new String[1];
                 args[0] = "blank";
             }
