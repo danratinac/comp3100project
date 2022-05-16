@@ -26,7 +26,11 @@ public class Client {
 
     public static void main(String[] args) {
         try {
-            System.out.println(args);
+            // set args to avoid null issues with later switch statements
+            if (args == null) {
+                args = new String[1];
+                args[0] = "blank";
+            }
 
             // open the socket used to connect to the server
             Socket socket = new Socket("localhost", DEFAULT_PORT);
@@ -103,11 +107,14 @@ public class Client {
 
             // schedule first job
             switch (args[0]) {
-                case "fc":
+                case "-fc":
                     scheduleJobFc(in, out);
                     break;
-                default:
+                case "-lrr":
                     scheduleJobLrr(out);
+                    break;
+                default:
+                    scheduleJobCustom(in, out);
                     break;
             }
 
