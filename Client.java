@@ -1,4 +1,3 @@
-
 /**
  * Author: Daniel Ratinac
  * Last updated: 26/5/2022
@@ -24,7 +23,7 @@ public class Client {
                                                                                   // largest type
 
     private static final int DEFAULT_PORT = 50000;
-    private static final int MAX_RUNTIME = 200;
+    private static final int MAX_RUNTIME = 100;
 
     public static void main(String[] args) {
         try {
@@ -210,26 +209,12 @@ public class Client {
                     index++;
                 } while (currentEstRuntime > MAX_RUNTIME && index < capServers.length);
 
-                // no servers found below threshold, schedule round robin to avoid scheduling
-                // all to last
-                if (index == capServers.length && currentEstRuntime > MAX_RUNTIME) {
-                    // send scheduling request
-                    sendMessage("SCHD " + currentJob.id + " " + servers[currentServer].type + " "
-                            + servers[currentServer].id, out);
-                    // move to next server for round robin scheduling
-                    if (currentServer == servers.length)
-                        currentServer = 0;
-                    else
-                        currentServer++;
-                } else { // at least one server is below threshold, schedule to it
-                    // decrement index by one as it is incremented regardless of whether loop will
-                    // continue
-                    index--;
+                // decrement index by one as it is incremented regardless of whether loop will
+                // continue
+                index--;
 
-                    // send scheduling request
-                    sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id,
-                            out);
-                }
+                // send scheduling request
+                sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id, out);
             }
 
         } catch (Exception e) {
