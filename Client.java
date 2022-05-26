@@ -381,8 +381,11 @@ public class Client {
                     currentEstRuntime = Integer.valueOf(rply);
 
                     index++;
-                } while (currentEstRuntime < MAX_RUNTIME);
+                } while (currentEstRuntime > MAX_RUNTIME);
 
+                // decrement index by one as it is incremented regardless of whether loop will continue
+                index--;
+                
                 // send scheduling request
                 msg = "SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id;
                 out.write((msg + "\n").getBytes());
