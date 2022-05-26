@@ -22,7 +22,7 @@ public class Client {
                                                                                   // largest type
 
     private static final int DEFAULT_PORT = 50000;
-    private static final int MAX_RUNTIME = 500;
+    private static final int MAX_RUNTIME = 200;
 
     public static void main(String[] args) {
         try {
