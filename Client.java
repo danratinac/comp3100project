@@ -170,7 +170,7 @@ public class Client {
     private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
         try {
             // get first capable server
-            ServerInfo capableInfo = getServersData(in, out, "cpbl")[0];
+            ServerInfo capableInfo = getServersData(in, out, "capable")[0];
 
             // send scheduling request
             sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
@@ -185,7 +185,7 @@ public class Client {
             String rply;
 
             // check for servers with necessary resources currently available
-            ServerInfo[] availServers = getServersData(in, out, "avail");
+            ServerInfo[] availServers = getServersData(in, out, "available");
 
             // if there are servers with the required resources available, schedule to the
             // first one
@@ -195,7 +195,7 @@ public class Client {
             } else { // otherwise fall back to the servers that can eventually provide the required
                      // resources
                 // get capable servers
-                ServerInfo[] capServers = getServersData(in, out, "cpbl");
+                ServerInfo[] capServers = getServersData(in, out, "capable");
 
                 // find the first capable server with an estimated runtime under the threshold
                 int index = 0;
@@ -307,11 +307,11 @@ public class Client {
             case "all":
                 sendMessage("GETS All", out);
                 break;
-            case "avail":
+            case "available":
                 sendMessage("GETS Avail " + currentJob.reqCores + " " + currentJob.reqMem + " "
                         + currentJob.reqDisk, out);
                 break;
-            case "capbl":
+            case "capable":
                 sendMessage("GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
                         + currentJob.reqDisk, out);
                 break;
