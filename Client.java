@@ -311,13 +311,13 @@ public class Client {
             String rply = in.readLine();
             System.out.println("Received: " + rply);
 
-            // send OK
-            /*out.write(("OK\n").getBytes());
-            out.flush();
-            System.out.println("Sent: OK");*/
-
             // if there are servers with the required resources available, schedule to the first one
             if (!rply.equals(".")) {
+                // send OK
+                out.write(("OK\n").getBytes());
+                out.flush();
+                System.out.println("Sent: OK");
+
                 // get first available server
                 ServerInfo server = extractServerInfo(rply);
 
