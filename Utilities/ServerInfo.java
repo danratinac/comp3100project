@@ -1,13 +1,19 @@
+/**
+ * Author: Daniel Ratinac
+ * Last updated: 26/5/2022
+ * Description: a utility class used to hold data that describes servers
+ */
+
 package Utilities;
 
 public class ServerInfo {
-    public String type;
-    public String id;
-    public int cores;
-    public int memory;
-    public int disk;
-    public int waitingJobs;
-    public int runningJobs;
+    public String type; // server type
+    public String id; // server id
+    public int cores; // number of cores
+    public int memory; // amount of memory
+    public int disk; // disk space
+    public int waitingJobs; // number of waiting jobs (unused)
+    public int runningJobs; // number of running jobs (unused)
 
     public ServerInfo(String typeIn, String idIn, String coresIn, String mem, String diskIn, String jobsWaiting,
             String jobsRunning) {

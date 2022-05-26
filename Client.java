@@ -1,8 +1,9 @@
-// avg turnaround time for ds-client (using week 9 config):
-// fc: 1805
-// ff: 1405
-// wf: 1802
-// bf: 1405
+/**
+ * Author: Daniel Ratinac
+ * Last updated: 26/5/2022
+ * Description: the main client class responsible for all scheduling-related 
+ * functionality
+ */
 
 import java.io.*;
 import java.net.*;
@@ -22,7 +23,7 @@ public class Client {
                                                                                   // largest type
 
     private static final int DEFAULT_PORT = 50000;
-    private static final int MAX_RUNTIME = 300;
+    private static final int MAX_RUNTIME = 100;
 
     public static void main(String[] args) {
         try {
