@@ -40,67 +40,32 @@ public class Client {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             // send HELO to server
-            out.write(("HELO\n").getBytes());
-            out.flush();
-            System.out.println("Sent: HELO");
+            sendMessage("HELO", out);
 
             // wait for OK from server
             waitFor("OK", in);
 
             // send AUTH and authentication info to server
-            out.write(("AUTH" + " " + System.getProperty("user.name") + "\n").getBytes());
-            out.flush();
-            System.out.println("Sent: AUTH");
+            sendMessage("AUTH" + " " + System.getProperty("user.name"));
 
             // wait for OK from server
             waitFor("OK", in);
 
             // send REDY when ready to start reading jobs
-            out.write(("REDY\n").getBytes());
-            out.flush();
-            System.out.println("Sent: REDY");
+            sendMessage("REDY", out);
 
             // read first job
-            String msg = "";
-            msg = in.readLine();
-            System.out.println("Received: " + msg);
+            String msg = receiveMessage(in);
             currentJob = extractJobInfo(msg);
 
-            // request server info
-            out.write(("GETS All\n").getBytes());
-            out.flush();
-            System.out.println("Sent: GETS All");
-
-            // get reply and initialise info array
-            msg = in.readLine();
-            System.out.println("Received: " + msg);
-            String[] info = msg.split(" ");
-            servers = new ServerInfo[Integer.valueOf(info[1])];
-
-            // send OK
-            out.write(("OK\n").getBytes());
-            out.flush();
-            System.out.println("Sent: OK");
-
-            // store server info
-            for (int i = 0; i < servers.length; i++) {
-                msg = in.readLine();
-                servers[i] = extractServerInfo(msg);
-            }
+            // initialise server info array
+            servers = getServersData(in, out, "all");
 
             // print server info
             for (ServerInfo server : servers) {
                 System.out.println(server.toString());
             }
             System.out.println();
-
-            // send OK
-            out.write(("OK\n").getBytes());
-            out.flush();
-            System.out.println("Sent: OK");
-
-            // wait for .
-            waitFor(".", in);
 
             // get list of largest servers for use in scheduling
             largestServers = getLargestServers();
@@ -133,13 +98,10 @@ public class Client {
                 System.out.println();
 
                 // send REDY for next info
-                out.write(("REDY\n").getBytes());
-                out.flush();
-                System.out.println("Sent: REDY");
+                sendMessage("REDY", out);
 
                 // get server's reply
-                msg = in.readLine();
-                System.out.println("Received: " + msg);
+                msg = receiveMessage(in);
 
                 // set command so we can check how to handle reply
                 command = msg.substring(0, 4);
@@ -173,20 +135,96 @@ public class Client {
             }
 
             // quit
-            out.write(("QUIT\n").getBytes());
-            out.flush();
-            System.out.println("Sent: QUIT");
+            sendMessage("QUIT", out);
 
-            msg = in.readLine();
-            System.out.println("Received: " + msg);
+            receiveMessage(in);
 
             out.close();
             socket.close();
         } catch (Exception e) {
             System.out.println(e);
         }
-
     }
+
+    /////////// SCHEDULING METHODS ////////////
+
+    // schedules jobs according to a largest round robin algorithm
+    private static void scheduleJobLrr(DataOutputStream out) {
+        try {
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + largestServers.get(currentServer).type + " "
+                    + largestServers.get(currentServer).id, out);
+
+            // move to next server for lrr scheduling
+            if (currentServer == largestServers.size() - 1)
+                currentServer = 0;
+            else
+                currentServer++;
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // schedules jobs according to a first capable algorithm
+    private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
+        try {
+            // get first capable server
+            ServerInfo capableInfo = getServersData(in, out, "cpbl")[0];
+
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
+
+            System.out.println("Sent: " + msg);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // schedules jobs according to a custom algorithm
+    private static void scheduleJobCustom(BufferedReader in, DataOutputStream out) {
+        try {
+            // check for servers with necessary resources currently available
+            ServerInfo[] availServers = getServersData(in, out, "avail");
+
+            // if there are servers with the required resources available, schedule to the
+            // first one
+            if (!availServers == null) {
+                // send scheduling request
+                sendMessage("SCHD " + currentJob.id + " " + availServers[0].type + " " + availServers[0].id, out);
+            } else { // otherwise fall back to the servers that can eventually provide the required
+                     // resources
+                // get capable servers
+                ServerInfo[] capServers = getServersData(in, out, "cpbl");
+
+                // find the first capable server with an estimated runtime under the threshold
+                int index = 0;
+                int currentEstRuntime = 0;
+                do {
+                    // get total estimate runtime for server
+                    sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
+
+                    rply = receiveMessage(in);
+
+                    currentEstRuntime = Integer.valueOf(rply);
+
+                    index++;
+                } while (currentEstRuntime > MAX_RUNTIME);
+
+                // decrement index by one as it is incremented regardless of whether loop will
+                // continue
+                index--;
+
+                // send scheduling request
+                sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id, out);
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    /////////// UTILITY METHODS ////////////
 
     // waits until the specified message is received
     private static void waitFor(String msg, BufferedReader in) {
@@ -199,6 +237,23 @@ public class Client {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    // send a message to the server
+    private static void sendMessage(String msg, DataOutputStream out) {
+        out.write((msg + "\n").getBytes());
+        out.flush();
+        // output to console
+        System.out.println("Sent: " + msg);
+    }
+
+    // receive message
+    private static String receiveMessage(BufferedReader in) {
+        String rply = in.readLine();
+        // output to console
+        System.out.println("Received: " + rply);
+
+        return rply;
     }
 
     // extracts job info in useable format from a ds-server JOBN message
@@ -234,168 +289,58 @@ public class Client {
         return largest;
     }
 
-    // schedules jobs according a largest round robin algorithm
-    private static void scheduleJobLrr(DataOutputStream out) {
-        try {
-            // send scheduling request
-            String msg = "SCHD " + currentJob.id + " " + largestServers.get(currentServer).type + " "
-                    + largestServers.get(currentServer).id;
-            out.write((msg + "\n").getBytes());
-            out.flush();
+    private static ServerInfo[] getServersData(BufferedReader in, DataOutputStream out, String mode) {
+        String msg;
+        String rply;
 
-            // move to next server for lrr scheduling
-            if (currentServer == largestServers.size() - 1)
-                currentServer = 0;
-            else
-                currentServer++;
-
-            System.out.println("Sent: " + msg);
-        } catch (Exception e) {
-            System.out.println(e);
+        // send the appropriate request based on the mode
+        switch (mode) {
+            case "all":
+                sendMessage("GETS All", out);
+                break;
+            case "avail":
+                sendMessage("GETS Avail " + currentJob.reqCores + " " + currentJob.reqMem + " "
+                        + currentJob.reqDisk, out);
+                break;
+            case "capbl":
+                sendMessage("GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
+                        + currentJob.reqDisk, out);
+                break;
+            default:
+                return null;
+                break;
         }
-    }
 
-    private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
-        try {
-            // get first capable server
-            String msg = "GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                    + currentJob.reqDisk;
-            out.write((msg + "\n").getBytes());
-            out.flush();
+        // get data
+        rply = receiveMessage(in);
 
-            System.out.println("Sent: " + msg);
+        // send OK
+        sendMessage("OK", out);
 
-            // get data and discard, we don't need any of the info it contains
-            System.out.println("Received: " + in.readLine());
-            out.write(("OK\n").getBytes());
-            out.flush();
-            System.out.println("Sent: OK");
+        // check that there is actually servers to return
+        int numServers = Integer.valueOf(rply.split(" ")[1]);
 
-            // get server info
-            String[] capableInfo = in.readLine().split(" ");
-            System.out.println("First capable: " + capableInfo[0] + capableInfo[1]);
-
-            // send OK
-            out.write(("OK\n").getBytes());
-            out.flush();
-            System.out.println("Sent: OK");
-
-            // send scheduling request
-            msg = "SCHD " + currentJob.id + " " + capableInfo[0] + " " + capableInfo[1];
-            out.write((msg + "\n").getBytes());
-            out.flush();
-
-            System.out.println("Sent: " + msg);
-        } catch (Exception e) {
-            System.out.println(e);
+        // return if there are no servers matching request
+        if (numServers == 0) {
+            receiveMessage(in);
+            return null;
         }
-    }
 
-    private static void scheduleJobCustom(BufferedReader in, DataOutputStream out) {
-        try {
-            // check for servers with necessary resources currently available
-            String msg = "GETS Avail " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                    + currentJob.reqDisk;
-            out.write((msg + "\n").getBytes());
-            out.flush();
+        // intialise server array
+        ServerInfo[] servers = new ServerInfo[numServers];
 
-            System.out.println("Sent: " + msg);
-
-            // get data and discard, we don't need any of the info it contains
-            System.out.println("Received: " + in.readLine());
-            out.write(("OK\n").getBytes());
-            out.flush();
-            System.out.println("Sent: OK");
-
-            // get info on first available server
-            String rply = in.readLine();
-            System.out.println("Received: " + rply);
-
-            // if there are servers with the required resources available, schedule to the
-            // first one
-            if (!rply.equals(".")) {
-                // send OK
-                out.write(("OK\n").getBytes());
-                out.flush();
-                System.out.println("Sent: OK");
-
-                // get first available server
-                ServerInfo server = extractServerInfo(rply);
-
-                // send scheduling request
-                msg = "SCHD " + currentJob.id + " " + server.type + " " + server.id;
-                out.write((msg + "\n").getBytes());
-                out.flush();
-
-                System.out.println("Sent: " + msg);
-            } else { // otherwise fall back to the servers that can eventually provide the required
-                     // resources
-                // get capable servers
-                msg = "GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                        + currentJob.reqDisk;
-                out.write((msg + "\n").getBytes());
-                out.flush();
-
-                System.out.println("Sent: " + msg);
-
-                // get data
-                rply = in.readLine();
-                System.out.println("Received: " + rply);
-
-                // send OK
-                out.write(("OK\n").getBytes());
-                out.flush();
-                System.out.println("Sent: OK");
-
-                ServerInfo[] capServers = new ServerInfo[Integer.valueOf(rply.split(" ")[1])];
-
-                // get server info
-                for (int i = 0; i < capServers.length; i++) {
-                    msg = in.readLine();
-                    System.out.println("Received: " + msg);
-                    capServers[i] = extractServerInfo(msg);
-                }
-
-                // send OK
-                out.write(("OK\n").getBytes());
-                out.flush();
-                System.out.println("Sent: OK");
-
-                // wait for reply
-                waitFor(".", in);
-
-                // find the first capable server with an estimated runtime under the threshold
-                int index = 0;
-                int currentEstRuntime = 0;
-                do {
-                    // get total estimate runtime for server
-                    msg = "EJWT " + capServers[index].type + " " + capServers[index].id;
-                    out.write((msg + "\n").getBytes());
-                    out.flush();
-
-                    System.out.println("Sent: " + msg);
-
-                    rply = in.readLine();
-                    System.out.println("Received: " + rply);
-
-                    currentEstRuntime = Integer.valueOf(rply);
-
-                    index++;
-                } while (currentEstRuntime > MAX_RUNTIME);
-
-                // decrement index by one as it is incremented regardless of whether loop will continue
-                index--;
-                
-                // send scheduling request
-                msg = "SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id;
-                out.write((msg + "\n").getBytes());
-                out.flush();
-
-                System.out.println("Sent: " + msg);
-            }
-
-        } catch (Exception e) {
-            System.out.println(e);
+        // get server info
+        for (int i = 0; i < servers.length; i++) {
+            msg = receiveMessage(in);
+            servers[i] = extractServerInfo(msg);
         }
+
+        // send OK
+        sendMessage("OK", out);
+
+        // get and discard reply
+        receiveMessage(in);
+
+        return servers;
     }
 }
