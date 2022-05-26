@@ -214,10 +214,13 @@ public class Client {
                 // all to last
                 if (index == capServers.length && currentEstRuntime > MAX_RUNTIME) {
                     // send scheduling request
-                    sendMessage("SCHD " + currentJob.id + " " + capServers[currentServer].type + " "
-                            + capServers[currentServer].id, out);
-                    // increment current server for next possible use
-                    currentServer++;
+                    sendMessage("SCHD " + currentJob.id + " " + servers[currentServer].type + " "
+                            + servers[currentServer].id, out);
+                    // move to next server for round robin scheduling
+                    if (currentServer == servers.length)
+                        currentServer = 0;
+                    else
+                        currentServer++;
                 } else { // at least one server is below threshold, schedule to it
                     // decrement index by one as it is incremented regardless of whether loop will
                     // continue
