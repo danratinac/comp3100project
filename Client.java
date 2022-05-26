@@ -311,7 +311,8 @@ public class Client {
             String rply = in.readLine();
             System.out.println("Received: " + rply);
 
-            // if there are servers with the required resources available, schedule to the first one
+            // if there are servers with the required resources available, schedule to the
+            // first one
             if (!rply.equals(".")) {
                 // send OK
                 out.write(("OK\n").getBytes());
@@ -327,10 +328,11 @@ public class Client {
                 out.flush();
 
                 System.out.println("Sent: " + msg);
-            } else { // otherwise fall back to the servers that can eventually provide the required resources
+            } else { // otherwise fall back to the servers that can eventually provide the required
+                     // resources
                 // get capable servers
                 msg = "GETS Capable " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                    + currentJob.reqDisk;
+                        + currentJob.reqDisk;
                 out.write((msg + "\n").getBytes());
                 out.flush();
 
@@ -344,18 +346,23 @@ public class Client {
                 out.write(("OK\n").getBytes());
                 out.flush();
                 System.out.println("Sent: OK");
-    
+
                 ServerInfo[] capServers = new ServerInfo[Integer.valueOf(rply.split(" ")[1])];
 
                 // get server info
                 for (int i = 0; i < capServers.length; i++) {
-                   capServers[i] = extractServerInfo(in.readLine());
+                    msg = in.readLine();
+                    System.out.println("Received: " + msg);
+                    capServers[i] = extractServerInfo(msg);
                 }
 
                 // send OK
                 out.write(("OK\n").getBytes());
                 out.flush();
                 System.out.println("Sent: OK");
+
+                // wait for reply
+                waitFor(".", in);
 
                 // find the first capable server with an estimated runtime under the threshold
                 int index = 0;
