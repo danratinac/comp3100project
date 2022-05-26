@@ -312,9 +312,9 @@ public class Client {
             System.out.println("Received: " + rply);
 
             // send OK
-            out.write(("OK\n").getBytes());
+            /*out.write(("OK\n").getBytes());
             out.flush();
-            System.out.println("Sent: OK");
+            System.out.println("Sent: OK");*/
 
             // if there are servers with the required resources available, schedule to the first one
             if (!rply.equals(".")) {
