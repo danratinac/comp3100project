@@ -63,7 +63,7 @@ public class Client {
             // read first job
             String msg = "";
             msg = in.readLine();
-            System.out.println("Recieved: " + msg);
+            System.out.println("Received: " + msg);
             currentJob = extractJobInfo(msg);
 
             // request server info
@@ -73,7 +73,7 @@ public class Client {
 
             // get reply and initialise info array
             msg = in.readLine();
-            System.out.println("Recieved: " + msg);
+            System.out.println("Received: " + msg);
             String[] info = msg.split(" ");
             servers = new ServerInfo[Integer.valueOf(info[1])];
 
@@ -139,7 +139,7 @@ public class Client {
 
                 // get server's reply
                 msg = in.readLine();
-                System.out.println("Recieved: " + msg);
+                System.out.println("Received: " + msg);
 
                 // set command so we can check how to handle reply
                 command = msg.substring(0, 4);
@@ -178,7 +178,7 @@ public class Client {
             System.out.println("Sent: QUIT");
 
             msg = in.readLine();
-            System.out.println("Recieved: " + msg);
+            System.out.println("Received: " + msg);
 
             out.close();
             socket.close();
@@ -195,7 +195,7 @@ public class Client {
             while (!input.equals(msg)) {
                 input = in.readLine();
             }
-            System.out.println("Recieved: " + input);
+            System.out.println("Received: " + input);
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -266,7 +266,7 @@ public class Client {
             System.out.println("Sent: " + msg);
 
             // get data and discard, we don't need any of the info it contains
-            System.out.println("Recieved: " + in.readLine());
+            System.out.println("Received: " + in.readLine());
             out.write(("OK\n").getBytes());
             out.flush();
             System.out.println("Sent: OK");
@@ -302,13 +302,14 @@ public class Client {
             System.out.println("Sent: " + msg);
 
             // get data and discard, we don't need any of the info it contains
-            System.out.println("Recieved: " + in.readLine());
+            System.out.println("Received: " + in.readLine());
             out.write(("OK\n").getBytes());
             out.flush();
             System.out.println("Sent: OK");
 
             // get info on first available server
             String rply = in.readLine();
+            System.out.println("Received: " + rply);
 
             // send OK
             out.write(("OK\n").getBytes());
@@ -337,7 +338,7 @@ public class Client {
 
                 // get data
                 rply = in.readLine();
-                System.out.println("Recieved: " + rply);
+                System.out.println("Received: " + rply);
 
                 // send OK
                 out.write(("OK\n").getBytes());
