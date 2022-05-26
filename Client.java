@@ -22,7 +22,7 @@ public class Client {
                                                                                   // largest type
 
     private static final int DEFAULT_PORT = 50000;
-    private static final int MAX_RUNTIME = 1500;
+    private static final int MAX_RUNTIME = 500;
 
     public static void main(String[] args) {
         try {
@@ -61,10 +61,7 @@ public class Client {
             // initialise server info array
             servers = getServersData(in, out, "all");
 
-            // print server info
-            for (ServerInfo server : servers) {
-                System.out.println(server.toString());
-            }
+            // space output
             System.out.println();
 
             // get list of largest servers for use in scheduling
@@ -209,7 +206,7 @@ public class Client {
                     currentEstRuntime = Integer.valueOf(rply);
 
                     index++;
-                } while (currentEstRuntime > MAX_RUNTIME);
+                } while (currentEstRuntime > MAX_RUNTIME && index < capServers.length);
 
                 // decrement index by one as it is incremented regardless of whether loop will
                 // continue
