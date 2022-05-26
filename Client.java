@@ -46,7 +46,7 @@ public class Client {
             waitFor("OK", in);
 
             // send AUTH and authentication info to server
-            sendMessage("AUTH" + " " + System.getProperty("user.name"));
+            sendMessage("AUTH" + " " + System.getProperty("user.name"), out);
 
             // wait for OK from server
             waitFor("OK", in);
@@ -174,8 +174,6 @@ public class Client {
 
             // send scheduling request
             sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
-
-            System.out.println("Sent: " + msg);
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -184,12 +182,14 @@ public class Client {
     // schedules jobs according to a custom algorithm
     private static void scheduleJobCustom(BufferedReader in, DataOutputStream out) {
         try {
+            String rply;
+
             // check for servers with necessary resources currently available
             ServerInfo[] availServers = getServersData(in, out, "avail");
 
             // if there are servers with the required resources available, schedule to the
             // first one
-            if (!availServers == null) {
+            if (availServers != null) {
                 // send scheduling request
                 sendMessage("SCHD " + currentJob.id + " " + availServers[0].type + " " + availServers[0].id, out);
             } else { // otherwise fall back to the servers that can eventually provide the required
@@ -241,19 +241,28 @@ public class Client {
 
     // send a message to the server
     private static void sendMessage(String msg, DataOutputStream out) {
-        out.write((msg + "\n").getBytes());
-        out.flush();
-        // output to console
-        System.out.println("Sent: " + msg);
+        try {
+            out.write((msg + "\n").getBytes());
+            out.flush();
+            // output to console
+            System.out.println("Sent: " + msg);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     // receive message
     private static String receiveMessage(BufferedReader in) {
-        String rply = in.readLine();
-        // output to console
-        System.out.println("Received: " + rply);
+        try {
+            String rply = in.readLine();
+            // output to console
+            System.out.println("Received: " + rply);
 
-        return rply;
+            return rply;
+        } catch (Exception e) {
+            System.out.println(e);
+            return null;
+        }
     }
 
     // extracts job info in useable format from a ds-server JOBN message
@@ -308,7 +317,6 @@ public class Client {
                 break;
             default:
                 return null;
-                break;
         }
 
         // get data
