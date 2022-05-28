@@ -80,6 +80,9 @@ public class Client {
                 case "-lb":
                     scheduleToLeastBusy(in, out);
                     break;
+                case "-fcl":
+                    scheduleJobFcLimited(in, out);
+                    break;
                 default:
                     scheduleJobCustom(in, out);
                     break;
@@ -122,6 +125,9 @@ public class Client {
                                 scheduleJobLrr(out);
                             case "-lb":
                                 scheduleToLeastBusy(in, out);
+                                break;
+                            case "-fcl":
+                                scheduleJobFcLimited(in, out);
                                 break;
                             default:
                                 scheduleJobCustom(in, out);
@@ -266,6 +272,34 @@ public class Client {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    private static void scheduleJobFcLimited(BufferedReader in, DataOutputStream out) {
+        String rply;
+
+        // get capable servers
+        ServerInfo[] capServers = getServersData(in, out, "capable");
+
+        // find the first capable server with an estimated runtime under the threshold
+        int index = 0;
+        int currentEstRuntime = 0;
+        do {
+            // get total estimate runtime for server
+            sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
+
+            rply = receiveMessage(in);
+
+            currentEstRuntime = Integer.valueOf(rply);
+
+            index++;
+        } while (currentEstRuntime > MAX_RUNTIME && index < capServers.length);
+
+        // decrement index by one as it is incremented regardless of whether loop will
+        // continue
+        index--;
+
+        // send scheduling request
+        sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id, out);
     }
 
     /////////// UTILITY METHODS ////////////
