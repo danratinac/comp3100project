@@ -78,6 +78,7 @@ public class Client {
                     scheduleJobLrr(out);
                     break;
                 case "-lb":
+                    System.out.println("case check 1");
                     scheduleToLeastBusy(in, out);
                     break;
                 default:
@@ -121,6 +122,7 @@ public class Client {
                             case "-lrr":
                                 scheduleJobLrr(out);
                             case "-lb":
+                                System.out.println("case check 2");
                                 scheduleToLeastBusy(in, out);
                             default:
                                 scheduleJobCustom(in, out);
