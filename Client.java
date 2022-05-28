@@ -1,3 +1,4 @@
+
 /**
  * Author: Daniel Ratinac
  * Last updated: 26/5/2022
@@ -76,6 +77,9 @@ public class Client {
                 case "-lrr":
                     scheduleJobLrr(out);
                     break;
+                case "-lb":
+                    scheduleToLeastBusy(in, out);
+                    break;
                 default:
                     scheduleJobCustom(in, out);
                     break;
@@ -116,6 +120,8 @@ public class Client {
                                 break;
                             case "-lrr":
                                 scheduleJobLrr(out);
+                            case "-lb":
+                                scheduleToLeastBusy(in, out);
                             default:
                                 scheduleJobCustom(in, out);
                                 break;
@@ -127,6 +133,10 @@ public class Client {
                         // there are no more jobs so stop the loop
                         moreJobs = false;
                         break;
+                    case "JCPL":
+                        // decrement jobs for appropriate server
+                        String[] split = msg.split(" ");
+                        servers[getServerIndexByInfo(split[3], split[4])].jobs--;
                     default:
                         break;
                 }
@@ -222,6 +232,41 @@ public class Client {
         }
     }
 
+    // schedule jobs to the capable server with the least total jobs (i.e. waiting
+    // jobs + running jobs)
+    private static void scheduleToLeastBusy(BufferedReader in, DataOutputStream out) {
+        try {
+            int currentJobs = 1;
+            int minJobs = 10000;
+            int scheduleTo = 0;
+            int i = 0;
+
+            // find the capable server with the least jobs based on local data
+            do {
+                // check that server is capable of running job
+                if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
+                        && servers[i].disk >= currentJob.reqDisk) {
+                    currentJobs = servers[i].jobs;
+                    // if server has less jobs waiting than current min, make it min
+                    if (currentJobs < minJobs) {
+                        minJobs = currentJobs;
+                        scheduleTo = i;
+                    }
+                }
+                i++;
+            } while (minJobs > 0 && i < servers.length);
+
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
+
+            // increment jobs for server that recieved jobs
+            servers[scheduleTo].jobs++;
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
     /////////// UTILITY METHODS ////////////
 
     // waits until the specified message is received
@@ -273,8 +318,19 @@ public class Client {
     // extracts server info in useable format from a ds-server GETS record
     private static ServerInfo extractServerInfo(String msg) {
         String[] info = msg.split(" ");
-        ServerInfo server = new ServerInfo(info[0], info[1], info[4], info[5], info[6], info[7], info[8]);
+        ServerInfo server = new ServerInfo(info[0], info[1], info[4], info[5], info[6]);
         return server;
+    }
+
+    // get the position of a server within the local servers array based on server
+    // type and id
+    private static int getServerIndexByInfo(String type, String id) {
+        int matchIndex = -1;
+        for (int i = 0; i < servers.length; i++) {
+            if (servers[i].type.equals(type) && servers[i].id == id)
+                matchIndex = i;
+        }
+        return matchIndex;
     }
 
     // returns a list of all servers that are of the type with most CPU cores
