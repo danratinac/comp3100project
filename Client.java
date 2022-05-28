@@ -83,6 +83,9 @@ public class Client {
                 case "-fcl":
                     scheduleJobFcLimited(in, out);
                     break;
+                case "-sw":
+                    scheduleJobShortestWait(in, out);
+                    break;
                 default:
                     scheduleJobCustom(in, out);
                     break;
@@ -129,6 +132,9 @@ public class Client {
                             case "-fcl":
                                 scheduleJobFcLimited(in, out);
                                 break;
+                            case "-sw":
+                                scheduleJobShortestWait(in, out);
+                                break;
                             default:
                                 scheduleJobCustom(in, out);
                                 break;
@@ -141,9 +147,18 @@ public class Client {
                         moreJobs = false;
                         break;
                     case "JCPL":
-                        // decrement jobs for appropriate server
                         String[] split = msg.split(" ");
-                        servers[getServerIndexByInfo(split[3], split[4])].jobs--;
+                        switch (args[0]) {
+                            case "-lb":
+                                // decrement jobs for appropriate server
+                                servers[getServerIndexByInfo(split[3], split[4])].jobs--;
+                                break;
+                            case "-sw":
+                                servers[getServerIndexByInfo(split[3], split[4])].estCompletionTimes.remove(0);
+                                break;
+                            default:
+                                break;
+                        }
                     default:
                         break;
                 }
@@ -302,6 +317,49 @@ public class Client {
         sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id, out);
     }
 
+    private static void scheduleJobShortestWait(BufferedReader in, DataOutputStream out) {
+        try {
+            // check for servers with necessary resources currently available
+            ServerInfo[] availServers = getServersData(in, out, "available");
+
+            // if there are servers with the required resources available, schedule to the
+            // first one
+            if (availServers != null) {
+                // send scheduling request
+                sendMessage("SCHD " + currentJob.id + " " + availServers[0].type + " " + availServers[0].id, out);
+                servers[getServerIndexByInfo(availServers[0].type, availServers[0].id)].estCompletionTimes.add(currentJob.estRunTime);
+            } else { // otherwise fall back to the servers that can eventually provide the required
+                     // resources
+
+                // find the first capable server with an estimated runtime under the threshold
+                int index = 0;
+                int currentWait = 0;
+                int minWait = 10000000;
+                int scheduleTo = 0;
+
+                do {
+                    currentWait = servers[index].estCompletionTimes.get(0);
+                    if (currentWait < minWait) {
+                        minWait = currentWait;
+                        scheduleTo = index;
+                    }                
+                    index++;
+                } while (minWait > 0 && index < servers.length);
+
+                // decrement index by one as it is incremented regardless of whether loop will
+                // continue
+                index--;
+
+                // send scheduling request
+                sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
+                servers[getServerIndexByInfo(servers[scheduleTo].type, servers[scheduleTo].id)].estCompletionTimes.add(currentJob.estRunTime);
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
     /////////// UTILITY METHODS ////////////
 
     // waits until the specified message is received
@@ -360,13 +418,12 @@ public class Client {
     // get the position of a server within the local servers array based on server
     // type and id
     private static int getServerIndexByInfo(String type, String id) {
-        int matchIndex = -1;
         for (int i = 0; i < servers.length; i++) {
             if (servers[i].type.equals(type) && servers[i].id.equals(id)) {
-                matchIndex = i;
+                return i;
             }
         }
-        return matchIndex;
+        return -1;
     }
 
     // returns a list of all servers that are of the type with most CPU cores

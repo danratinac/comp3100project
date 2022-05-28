@@ -6,6 +6,8 @@
 
 package Utilities;
 
+import java.util.ArrayList;
+
 public class ServerInfo {
     public String type; // server type
     public String id; // server id
@@ -13,6 +15,8 @@ public class ServerInfo {
     public int memory; // amount of memory
     public int disk; // disk space
     public int jobs; // number of jobs either waiting or running
+    public ArrayList<Integer> estCompletionTimes = new ArrayList<Integer>(); // list of estimated completion times for
+                                                                             // current job followed by scheduled jobs
 
     public ServerInfo(String typeIn, String idIn, String coresIn, String mem, String diskIn) {
         type = typeIn;
