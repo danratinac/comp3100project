@@ -327,6 +327,7 @@ public class Client {
     private static int getServerIndexByInfo(String type, String id) {
         int matchIndex = -1;
         for (int i = 0; i < servers.length; i++) {
+            System.out.println("looking for " + type + " " + id + " in " + servers[i].type + " " + servers[i].id);
             if (servers[i].type.equals(type) && servers[i].id == id)
                 matchIndex = i;
         }
