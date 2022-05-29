@@ -325,11 +325,10 @@ public class Client {
             int minWait = 10000000;
             int scheduleTo = 0;
 
-            Integer holder;
-
             do {
-                holder = servers[index].estCompletionTimes.get(0);
-                currentWait = holder == null ? 0 : holder;
+
+                currentWait = servers[index].estCompletionTimes.size() == 0 ? 0
+                        : servers[index].estCompletionTimes.get(0);
                 if (currentWait < minWait) {
                     minWait = currentWait;
                     scheduleTo = index;
