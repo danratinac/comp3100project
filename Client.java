@@ -35,6 +35,11 @@ public class Client {
                 args = new String[2];
                 args[0] = "blank";
                 args[1] = "blank";
+            } else if (args.length == 1) {
+                String holder = args[0];
+                args = new String[2];
+                args[0] = holder;
+                args[1] = "blank";
             }
 
             globalArgs = args;
@@ -507,11 +512,10 @@ public class Client {
     }
 
     private static void log(Object s) {
-        System.out.println(globalArgs[1]);
-        if (globalArgs[1].equals("-l")) log(s.toString());
+        if (globalArgs[1].toString().equals("-l")) log(s.toString());
     }
 
     private static void log() {
-        if (globalArgs[1].equals("-l")) log();
+        if (globalArgs[1].toString().equals("-l")) log();
     }
 }
