@@ -92,7 +92,7 @@ public class Client {
             }
 
             // wait for OK
-            waitFor("OK", in);
+            receiveMessage(in);
 
             // used for switching based on what the server's reply to REDY is
             String command;
@@ -140,7 +140,7 @@ public class Client {
                                 break;
                         }
 
-                        waitFor("OK", in);
+                        receiveMessage(in);
                         break;
                     case "NONE":
                         // there are no more jobs so stop the loop
