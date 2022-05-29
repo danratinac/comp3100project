@@ -74,7 +74,7 @@ public class Client {
             servers = getServersData(in, out, "all");
 
             // space output
-            log();
+            System.out.println();
 
             // get list of largest servers for use in scheduling
             largestServers = getLargestServers();
@@ -113,7 +113,7 @@ public class Client {
             // main loop, handles all messages from the server from now on
             while (moreJobs) {
                 // space console output for readability
-                log();
+                System.out.println();
 
                 // send REDY for next info
                 sendMessage("REDY", out);
@@ -186,7 +186,7 @@ public class Client {
             out.close();
             socket.close();
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -206,7 +206,7 @@ public class Client {
                 currentServer++;
 
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -219,7 +219,7 @@ public class Client {
             // send scheduling request
             sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -264,7 +264,7 @@ public class Client {
             }
 
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -299,7 +299,7 @@ public class Client {
             servers[scheduleTo].jobs++;
 
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -344,11 +344,11 @@ public class Client {
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
-                    log("server matches with " + servers[i].cores + " " + servers[i].memory + " "
+                    System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
                             + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
                             + currentJob.reqDisk);
                     currentWait = servers[i].estCompletionTimes.get(0);
-                    log("est wait time for server: " + currentWait);
+                    System.out.println("est wait time for server: " + currentWait);
                     if (currentWait < minWait) {
                         minWait = currentWait;
                         scheduleTo = i;
@@ -368,7 +368,7 @@ public class Client {
             servers[scheduleTo].estCompletionTimes.set(0,
                     servers[scheduleTo].estCompletionTimes.get(0) + currentJob.estRunTime);
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -381,9 +381,9 @@ public class Client {
             while (!input.equals(msg)) {
                 input = in.readLine();
             }
-            log("Received: " + input);
+            System.out.println("Received: " + input);
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -393,9 +393,9 @@ public class Client {
             out.write((msg + "\n").getBytes());
             out.flush();
             // output to console
-            log("Sent: " + msg);
+            System.out.println("Sent: " + msg);
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
         }
     }
 
@@ -404,11 +404,11 @@ public class Client {
         try {
             String rply = in.readLine();
             // output to console
-            log("Received: " + rply);
+            System.out.println("Received: " + rply);
 
             return rply;
         } catch (Exception e) {
-            log(e);
+            System.out.println(e);
             return null;
         }
     }
@@ -513,11 +513,11 @@ public class Client {
 
     private static void log(Object s) {
         String arg = globalArgs[1];
-        if (arg.equals("-l")) log(s.toString());
+        if (arg.equals("-l")) System.out.println(s.toString());
     }
 
     private static void log() {
         String arg = globalArgs[1];
-        if (arg.equals("-l")) log();
+        if (arg.equals("-l")) System.out.println();
     }
 }
