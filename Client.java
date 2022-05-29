@@ -23,8 +23,6 @@ public class Client {
     private static List<ServerInfo> largestServers = new ArrayList<ServerInfo>(); // a list of all servers of the
                                                                                   // largest type
 
-    private static String[] globalArgs; // global copy of command line arguments for use in utility methods
-
     private static final int DEFAULT_PORT = 50000;
     private static final int MAX_RUNTIME = 1000;
 
@@ -32,17 +30,9 @@ public class Client {
         try {
             // set args to avoid null issues with later switch statements
             if (args.length == 0) {
-                args = new String[2];
+                args = new String[1];
                 args[0] = "blank";
-                args[1] = "blank";
-            } else if (args.length == 1) {
-                String holder = args[0];
-                args = new String[2];
-                args[0] = holder;
-                args[1] = "blank";
             }
-
-            globalArgs = args;
 
             // open the socket used to connect to the server
             Socket socket = new Socket("localhost", DEFAULT_PORT);
@@ -244,6 +234,9 @@ public class Client {
                 // find the first capable server with an estimated runtime under the threshold
                 int index = 0;
                 int currentEstRuntime = 0;
+                int minRuntime = 1000000000;
+                int scheduleTo = -1;
+
                 do {
                     // get total estimate runtime for server
                     sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
@@ -251,6 +244,11 @@ public class Client {
                     rply = receiveMessage(in);
 
                     currentEstRuntime = Integer.valueOf(rply);
+
+                    if (currentEstRuntime < minRuntime) {
+                        minRuntime = currentEstRuntime;
+                        scheduleTo = index;
+                    }
 
                     index++;
                 } while (currentEstRuntime > MAX_RUNTIME && index < capServers.length);
@@ -260,7 +258,12 @@ public class Client {
                 index--;
 
                 // send scheduling request
-                sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id, out);
+                if (scheduleTo == -1)
+                    sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id,
+                            out);
+                else
+                    sendMessage("SCHD " + currentJob.id + " " + capServers[scheduleTo].type + " "
+                            + capServers[scheduleTo].id, out);
             }
 
         } catch (Exception e) {
@@ -344,11 +347,15 @@ public class Client {
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
-                    /*System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
-                            + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                            + currentJob.reqDisk);*/
+                    /*
+                     * System.out.println("server matches with " + servers[i].cores + " " +
+                     * servers[i].memory + " "
+                     * + servers[i].disk + " against " + currentJob.reqCores + " " +
+                     * currentJob.reqMem + " "
+                     * + currentJob.reqDisk);
+                     */
                     currentWait = servers[i].estCompletionTimes.get(0);
-                    //System.out.println("est wait time for server: " + currentWait);
+                    // System.out.println("est wait time for server: " + currentWait);
                     if (currentWait < minWait) {
                         minWait = currentWait;
                         scheduleTo = i;
@@ -509,15 +516,5 @@ public class Client {
         receiveMessage(in);
 
         return servers;
-    }
-
-    private static void log(Object s) {
-        String arg = globalArgs[1];
-        if (arg.equals("-l")) System.out.println(s.toString());
-    }
-
-    private static void log() {
-        String arg = globalArgs[1];
-        if (arg.equals("-l")) System.out.println();
     }
 }
