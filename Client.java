@@ -268,6 +268,9 @@ public class Client {
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
+                    System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
+                            + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
+                            + currentJob.reqDisk);
                     currentJobs = servers[i].jobs;
                     // if server has less jobs waiting than current min, make it min
                     if (currentJobs < minJobs) {
