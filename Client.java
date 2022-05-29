@@ -23,6 +23,8 @@ public class Client {
     private static List<ServerInfo> largestServers = new ArrayList<ServerInfo>(); // a list of all servers of the
                                                                                   // largest type
 
+    private static String[] globalArgs; // global copy of command line arguments for use in utility methods
+
     private static final int DEFAULT_PORT = 50000;
     private static final int MAX_RUNTIME = 1000;
 
@@ -30,9 +32,12 @@ public class Client {
         try {
             // set args to avoid null issues with later switch statements
             if (args.length == 0) {
-                args = new String[1];
+                args = new String[2];
                 args[0] = "blank";
+                args[1] = "blank";
             }
+
+            globalArgs = args;
 
             // open the socket used to connect to the server
             Socket socket = new Socket("localhost", DEFAULT_PORT);
@@ -64,7 +69,7 @@ public class Client {
             servers = getServersData(in, out, "all");
 
             // space output
-            System.out.println();
+            log();
 
             // get list of largest servers for use in scheduling
             largestServers = getLargestServers();
@@ -103,7 +108,7 @@ public class Client {
             // main loop, handles all messages from the server from now on
             while (moreJobs) {
                 // space console output for readability
-                System.out.println();
+                log();
 
                 // send REDY for next info
                 sendMessage("REDY", out);
@@ -154,7 +159,11 @@ public class Client {
                                 servers[getServerIndexByInfo(split[3], split[4])].jobs--;
                                 break;
                             case "-sw":
-                                servers[getServerIndexByInfo(split[3], split[4])].estCompletionTimes.remove(0);
+                                int serverIndex = getServerIndexByInfo(split[3], split[4]);
+                                servers[serverIndex].estCompletionTimes.set(0,
+                                        servers[serverIndex].estCompletionTimes.get(0)
+                                                - servers[serverIndex].estCompletionTimes.get(1));
+                                servers[serverIndex].estCompletionTimes.remove(1);
                                 break;
                             default:
                                 break;
@@ -172,7 +181,7 @@ public class Client {
             out.close();
             socket.close();
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -192,7 +201,7 @@ public class Client {
                 currentServer++;
 
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -205,7 +214,7 @@ public class Client {
             // send scheduling request
             sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -250,7 +259,7 @@ public class Client {
             }
 
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -285,7 +294,7 @@ public class Client {
             servers[scheduleTo].jobs++;
 
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -330,17 +339,11 @@ public class Client {
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
-                    System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
+                    log("server matches with " + servers[i].cores + " " + servers[i].memory + " "
                             + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
                             + currentJob.reqDisk);
-                    if (servers[i].estCompletionTimes.size() == 0) {
-                        currentWait = 0;
-                    } else {
-                        for (Integer waitTime : servers[i].estCompletionTimes) {
-                            currentWait += waitTime;
-                        }
-                    }
-                    System.out.println("est wait time for server: " + currentWait);
+                    currentWait = servers[i].estCompletionTimes.get(0);
+                    log("est wait time for server: " + currentWait);
                     if (currentWait < minWait) {
                         minWait = currentWait;
                         scheduleTo = i;
@@ -355,11 +358,12 @@ public class Client {
 
             // send scheduling request
             sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
-            servers[getServerIndexByInfo(servers[scheduleTo].type, servers[scheduleTo].id)].estCompletionTimes
+            servers[scheduleTo].estCompletionTimes
                     .add(currentJob.estRunTime);
-
+            servers[scheduleTo].estCompletionTimes.set(0,
+                    servers[scheduleTo].estCompletionTimes.get(0) + currentJob.estRunTime);
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -372,9 +376,9 @@ public class Client {
             while (!input.equals(msg)) {
                 input = in.readLine();
             }
-            System.out.println("Received: " + input);
+            log("Received: " + input);
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -384,9 +388,9 @@ public class Client {
             out.write((msg + "\n").getBytes());
             out.flush();
             // output to console
-            System.out.println("Sent: " + msg);
+            log("Sent: " + msg);
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
         }
     }
 
@@ -395,11 +399,11 @@ public class Client {
         try {
             String rply = in.readLine();
             // output to console
-            System.out.println("Received: " + rply);
+            log("Received: " + rply);
 
             return rply;
         } catch (Exception e) {
-            System.out.println(e);
+            log(e);
             return null;
         }
     }
@@ -500,5 +504,13 @@ public class Client {
         receiveMessage(in);
 
         return servers;
+    }
+
+    private static void log(Object s) {
+        if (globalArgs[1].equals("-l")) log(s.toString());
+    }
+
+    private static void log() {
+        if (globalArgs[1].equals("-l")) log();
     }
 }

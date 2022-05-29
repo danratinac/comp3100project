@@ -24,6 +24,7 @@ public class ServerInfo {
         cores = Integer.valueOf(coresIn);
         memory = Integer.valueOf(mem);
         disk = Integer.valueOf(diskIn);
+        estCompletionTimes.add(0);
     }
 
     public String toString() {
