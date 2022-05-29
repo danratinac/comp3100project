@@ -334,6 +334,7 @@ public class Client {
                             + currentJob.reqDisk);
                     currentWait = servers[i].estCompletionTimes.size() == 0 ? 0
                             : servers[i].estCompletionTimes.get(0);
+                    System.out.println("est wait time for server: " + currentWait);
                     if (currentWait < minWait) {
                         minWait = currentWait;
                         scheduleTo = i;
