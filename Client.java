@@ -512,10 +512,12 @@ public class Client {
     }
 
     private static void log(Object s) {
-        if (globalArgs[1].toString().equals("-l")) log(s.toString());
+        String arg = globalArgs[1];
+        if (arg.equals("-l")) log(s.toString());
     }
 
     private static void log() {
-        if (globalArgs[1].toString().equals("-l")) log();
+        String arg = globalArgs[1];
+        if (arg.equals("-l")) log();
     }
 }
