@@ -507,6 +507,7 @@ public class Client {
     }
 
     private static void log(Object s) {
+        System.out.println(globalArgs[1]);
         if (globalArgs[1].equals("-l")) log(s.toString());
     }
 
