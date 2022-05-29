@@ -233,37 +233,40 @@ public class Client {
 
                 // find the first capable server with an estimated runtime under the threshold
                 int index = 0;
-                int currentEstRuntime = 0;
-                int minRuntime = 1000000000;
-                int scheduleTo = -1;
+                int currentEstWait = 0;
+                int minWait = 1000000000;
+                int scheduleTo = 0;
 
                 do {
-                    // get total estimate runtime for server
+                    // get estimated wait time for server
                     sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
 
                     rply = receiveMessage(in);
 
-                    currentEstRuntime = Integer.valueOf(rply);
+                    currentEstWait = Integer.valueOf(rply);
 
-                    if (currentEstRuntime < minRuntime) {
-                        minRuntime = currentEstRuntime;
+                    if (currentEstWait < minWait) {
+                        minWait = currentEstWait;
                         scheduleTo = index;
                     }
 
                     index++;
-                } while (currentEstRuntime > MAX_RUNTIME && index < capServers.length);
+                } while (index < capServers.length);
 
                 // decrement index by one as it is incremented regardless of whether loop will
                 // continue
                 index--;
 
+                sendMessage("SCHD " + currentJob.id + " " + capServers[scheduleTo].type + " "
+                            + capServers[scheduleTo].id, out);
+
                 // send scheduling request
-                if (scheduleTo == -1)
+                /*if (scheduleTo == -1)
                     sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id,
                             out);
                 else
                     sendMessage("SCHD " + currentJob.id + " " + capServers[scheduleTo].type + " "
-                            + capServers[scheduleTo].id, out);
+                            + capServers[scheduleTo].id, out);*/
             }
 
         } catch (Exception e) {
