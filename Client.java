@@ -319,41 +319,32 @@ public class Client {
 
     private static void scheduleJobShortestWait(BufferedReader in, DataOutputStream out) {
         try {
-            // check for servers with necessary resources currently available
-            ServerInfo[] availServers = getServersData(in, out, "available");
+            // find the first capable server with an estimated runtime under the threshold
+            int index = 0;
+            int currentWait = 0;
+            int minWait = 10000000;
+            int scheduleTo = 0;
 
-            // if there are servers with the required resources available, schedule to the
-            // first one
-            if (availServers != null) {
-                // send scheduling request
-                sendMessage("SCHD " + currentJob.id + " " + availServers[0].type + " " + availServers[0].id, out);
-                servers[getServerIndexByInfo(availServers[0].type, availServers[0].id)].estCompletionTimes.add(currentJob.estRunTime);
-            } else { // otherwise fall back to the servers that can eventually provide the required
-                     // resources
+            Integer holder;
 
-                // find the first capable server with an estimated runtime under the threshold
-                int index = 0;
-                int currentWait = 0;
-                int minWait = 10000000;
-                int scheduleTo = 0;
+            do {
+                holder = servers[index].estCompletionTimes.get(0);
+                currentWait = holder == null ? 0 : holder;
+                if (currentWait < minWait) {
+                    minWait = currentWait;
+                    scheduleTo = index;
+                }
+                index++;
+            } while (minWait > 0 && index < servers.length);
 
-                do {
-                    currentWait = servers[index].estCompletionTimes.get(0);
-                    if (currentWait < minWait) {
-                        minWait = currentWait;
-                        scheduleTo = index;
-                    }                
-                    index++;
-                } while (minWait > 0 && index < servers.length);
+            // decrement index by one as it is incremented regardless of whether loop will
+            // continue
+            index--;
 
-                // decrement index by one as it is incremented regardless of whether loop will
-                // continue
-                index--;
-
-                // send scheduling request
-                sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
-                servers[getServerIndexByInfo(servers[scheduleTo].type, servers[scheduleTo].id)].estCompletionTimes.add(currentJob.estRunTime);
-            }
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
+            servers[getServerIndexByInfo(servers[scheduleTo].type, servers[scheduleTo].id)].estCompletionTimes
+                    .add(currentJob.estRunTime);
 
         } catch (Exception e) {
             System.out.println(e);
