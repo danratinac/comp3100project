@@ -344,11 +344,11 @@ public class Client {
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
-                    System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
+                    /*System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
                             + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                            + currentJob.reqDisk);
+                            + currentJob.reqDisk);*/
                     currentWait = servers[i].estCompletionTimes.get(0);
-                    System.out.println("est wait time for server: " + currentWait);
+                    //System.out.println("est wait time for server: " + currentWait);
                     if (currentWait < minWait) {
                         minWait = currentWait;
                         scheduleTo = i;
