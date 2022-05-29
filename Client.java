@@ -332,8 +332,13 @@ public class Client {
                     System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
                             + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
                             + currentJob.reqDisk);
-                    currentWait = servers[i].estCompletionTimes.size() == 0 ? 0
-                            : servers[i].estCompletionTimes.get(0);
+                    if (servers[i].estCompletionTimes.size() == 0) {
+                        currentWait = 0;
+                    } else {
+                        for (Integer waitTime : servers[i].estCompletionTimes) {
+                            currentWait += waitTime;
+                        }
+                    }
                     System.out.println("est wait time for server: " + currentWait);
                     if (currentWait < minWait) {
                         minWait = currentWait;
