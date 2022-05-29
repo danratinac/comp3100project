@@ -268,9 +268,6 @@ public class Client {
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
-                    System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
-                            + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
-                            + currentJob.reqDisk);
                     currentJobs = servers[i].jobs;
                     // if server has less jobs waiting than current min, make it min
                     if (currentJobs < minJobs) {
@@ -323,25 +320,31 @@ public class Client {
     private static void scheduleJobShortestWait(BufferedReader in, DataOutputStream out) {
         try {
             // find the first capable server with an estimated runtime under the threshold
-            int index = 0;
+            int i = 0;
             int currentWait = 0;
             int minWait = 10000000;
             int scheduleTo = 0;
 
             do {
-
-                currentWait = servers[index].estCompletionTimes.size() == 0 ? 0
-                        : servers[index].estCompletionTimes.get(0);
-                if (currentWait < minWait) {
-                    minWait = currentWait;
-                    scheduleTo = index;
+                // check that server is capable of running job
+                if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
+                        && servers[i].disk >= currentJob.reqDisk) {
+                    System.out.println("server matches with " + servers[i].cores + " " + servers[i].memory + " "
+                            + servers[i].disk + " against " + currentJob.reqCores + " " + currentJob.reqMem + " "
+                            + currentJob.reqDisk);
+                    currentWait = servers[i].estCompletionTimes.size() == 0 ? 0
+                            : servers[i].estCompletionTimes.get(0);
+                    if (currentWait < minWait) {
+                        minWait = currentWait;
+                        scheduleTo = i;
+                    }
                 }
-                index++;
-            } while (minWait > 0 && index < servers.length);
+                i++;
+            } while (minWait > 0 && i < servers.length);
 
             // decrement index by one as it is incremented regardless of whether loop will
             // continue
-            index--;
+            i--;
 
             // send scheduling request
             sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
