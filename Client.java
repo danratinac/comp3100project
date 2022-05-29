@@ -326,6 +326,7 @@ public class Client {
             int scheduleTo = 0;
 
             do {
+                currentWait = 0;
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
