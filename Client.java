@@ -180,9 +180,7 @@ public class Client {
         }
     }
 
-    /////////// SCHEDULING METHODS ////////////
-
-    /******* ALGORITHM USED FOR STAGE 2 ******/
+    //////// ALGORITHM USED FOR STAGE 2 ///////
 
     // schedules jobs according to a custom algorithm
     private static void scheduleJobCustom(BufferedReader in, DataOutputStream out) {
@@ -231,140 +229,6 @@ public class Client {
                             + capServers[scheduleTo].id, out);
             }
 
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    /**** EXTRA ALGORITHMS (NOT USED FOR PROJECT) ****/
-
-    // schedules jobs according to a largest round robin algorithm
-    private static void scheduleJobLrr(DataOutputStream out) {
-        try {
-            // send scheduling request
-            sendMessage("SCHD " + currentJob.id + " " + largestServers.get(currentServer).type + " "
-                    + largestServers.get(currentServer).id, out);
-
-            // move to next server for lrr scheduling
-            if (currentServer == largestServers.size() - 1)
-                currentServer = 0;
-            else
-                currentServer++;
-
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    // schedules jobs according to a first capable algorithm
-    private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
-        try {
-            // get first capable server
-            ServerInfo capableInfo = getServersData(in, out, "capable")[0];
-
-            // send scheduling request
-            sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    // schedule jobs to the capable server with the least total jobs (i.e. waiting
-    // jobs + running jobs)
-    private static void scheduleToLeastBusy(BufferedReader in, DataOutputStream out) {
-        try {
-            int currentJobs = 1;
-            int minJobs = 10000;
-            int scheduleTo = 0;
-            int i = 0;
-
-            // find the capable server with the least jobs based on local data
-            do {
-                // check that server is capable of running job
-                if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
-                        && servers[i].disk >= currentJob.reqDisk) {
-                    currentJobs = servers[i].jobs;
-                    // if server has less jobs waiting than current min, make it min
-                    if (currentJobs < minJobs) {
-                        minJobs = currentJobs;
-                        scheduleTo = i;
-                    }
-                }
-                i++;
-            } while (minJobs > 0 && i < servers.length);
-
-            // send scheduling request
-            sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
-
-            // increment jobs for server that recieved jobs
-            servers[scheduleTo].jobs++;
-
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    private static void scheduleJobFcLimited(BufferedReader in, DataOutputStream out) {
-        String rply;
-
-        // get capable servers
-        ServerInfo[] capServers = getServersData(in, out, "capable");
-
-        // find the first capable server with an estimated runtime under the threshold
-        int index = 0;
-        int currentEstRuntime = 0;
-        do {
-            // get total estimate runtime for server
-            sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
-
-            rply = receiveMessage(in);
-
-            currentEstRuntime = Integer.valueOf(rply);
-
-            index++;
-        } while (currentEstRuntime > MAX_RUNTIME && index < capServers.length);
-
-        // decrement index by one as it is incremented regardless of whether loop will
-        // continue
-        index--;
-
-        // send scheduling request
-        sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id, out);
-    }
-
-    private static void scheduleJobShortestWait(BufferedReader in, DataOutputStream out) {
-        try {
-            // find the first capable server with an estimated runtime under the threshold
-            int i = 0;
-            int currentWait = 0;
-            int minWait = 10000000;
-            int scheduleTo = 0;
-
-            do {
-                currentWait = 0;
-                // check that server is capable of running job
-                if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
-                        && servers[i].disk >= currentJob.reqDisk) {
-                    currentWait = servers[i].estCompletionTimes.get(0);
-                    // System.out.println("est wait time for server: " + currentWait);
-                    if (currentWait < minWait) {
-                        minWait = currentWait;
-                        scheduleTo = i;
-                    }
-                }
-                i++;
-            } while (minWait > 0 && i < servers.length);
-
-            // decrement index by one as it is incremented regardless of whether loop will
-            // continue
-            i--;
-
-            // send scheduling request
-            sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
-            servers[scheduleTo].estCompletionTimes
-                    .add(currentJob.estRunTime);
-            servers[scheduleTo].estCompletionTimes.set(0,
-                    servers[scheduleTo].estCompletionTimes.get(0) + currentJob.estRunTime);
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -455,6 +319,7 @@ public class Client {
         return largest;
     }
 
+    // packages up GETS request and associated replies into a neater format
     private static ServerInfo[] getServersData(BufferedReader in, DataOutputStream out, String mode) {
         String msg;
         String rply;
@@ -507,5 +372,141 @@ public class Client {
         receiveMessage(in);
 
         return servers;
+    }
+
+    ///////// EXTRA SCHEDULING METHODS /////////
+    /**** PLEASE DO NOT MARK ANYTHING PAST THIS POINT *****/
+
+    // schedules jobs according to a largest round robin algorithm
+    private static void scheduleJobLrr(DataOutputStream out) {
+        try {
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + largestServers.get(currentServer).type + " "
+                    + largestServers.get(currentServer).id, out);
+
+            // move to next server for lrr scheduling
+            if (currentServer == largestServers.size() - 1)
+                currentServer = 0;
+            else
+                currentServer++;
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // schedules jobs according to a first capable algorithm
+    private static void scheduleJobFc(BufferedReader in, DataOutputStream out) {
+        try {
+            // get first capable server
+            ServerInfo capableInfo = getServersData(in, out, "capable")[0];
+
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // schedule jobs to the capable server with the least total jobs (i.e. waiting
+    // jobs + running jobs)
+    private static void scheduleToLeastBusy(BufferedReader in, DataOutputStream out) {
+        try {
+            int currentJobs = 1;
+            int minJobs = 10000;
+            int scheduleTo = 0;
+            int i = 0;
+
+            // find the capable server with the least jobs based on local data
+            do {
+                // check that server is capable of running job
+                if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
+                        && servers[i].disk >= currentJob.reqDisk) {
+                    currentJobs = servers[i].jobs;
+                    // if server has less jobs waiting than current min, make it min
+                    if (currentJobs < minJobs) {
+                        minJobs = currentJobs;
+                        scheduleTo = i;
+                    }
+                }
+                i++;
+            } while (minJobs > 0 && i < servers.length);
+
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
+
+            // increment jobs for server that recieved jobs
+            servers[scheduleTo].jobs++;
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // schedules jobs using a limited version of a first capable algorithm
+    private static void scheduleJobFcLimited(BufferedReader in, DataOutputStream out) {
+        String rply;
+
+        // get capable servers
+        ServerInfo[] capServers = getServersData(in, out, "capable");
+
+        // find the first capable server with an estimated runtime under the threshold
+        int index = 0;
+        int currentEstRuntime = 0;
+        do {
+            // get total estimate runtime for server
+            sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
+
+            rply = receiveMessage(in);
+
+            currentEstRuntime = Integer.valueOf(rply);
+
+            index++;
+        } while (currentEstRuntime > MAX_RUNTIME && index < capServers.length);
+
+        // decrement index by one as it is incremented regardless of whether loop will
+        // continue
+        index--;
+
+        // send scheduling request
+        sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id, out);
+    }
+
+    private static void scheduleJobShortestWait(BufferedReader in, DataOutputStream out) {
+        try {
+            // find the first capable server with an estimated runtime under the threshold
+            int i = 0;
+            int currentWait = 0;
+            int minWait = 10000000;
+            int scheduleTo = 0;
+
+            do {
+                currentWait = 0;
+                // check that server is capable of running job
+                if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
+                        && servers[i].disk >= currentJob.reqDisk) {
+                    currentWait = servers[i].estCompletionTimes.get(0);
+                    // System.out.println("est wait time for server: " + currentWait);
+                    if (currentWait < minWait) {
+                        minWait = currentWait;
+                        scheduleTo = i;
+                    }
+                }
+                i++;
+            } while (minWait > 0 && i < servers.length);
+
+            // decrement index by one as it is incremented regardless of whether loop will
+            // continue
+            i--;
+
+            // send scheduling request
+            sendMessage("SCHD " + currentJob.id + " " + servers[scheduleTo].type + " " + servers[scheduleTo].id, out);
+            servers[scheduleTo].estCompletionTimes
+                    .add(currentJob.estRunTime);
+            servers[scheduleTo].estCompletionTimes.set(0,
+                    servers[scheduleTo].estCompletionTimes.get(0) + currentJob.estRunTime);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 }
