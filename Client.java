@@ -182,6 +182,62 @@ public class Client {
 
     /////////// SCHEDULING METHODS ////////////
 
+    /******* ALGORITHM USED FOR STAGE 2 ******/
+
+    // schedules jobs according to a custom algorithm
+    private static void scheduleJobCustom(BufferedReader in, DataOutputStream out) {
+        try {
+            String rply;
+
+            // check for servers with necessary resources currently available
+            ServerInfo[] availServers = getServersData(in, out, "available");
+
+            // if there are servers with the required resources available, schedule to the
+            // first one
+            if (availServers != null) {
+                // send scheduling request
+                sendMessage("SCHD " + currentJob.id + " " + availServers[0].type + " " + availServers[0].id, out);
+            } else { // otherwise fall back to the servers that can eventually provide the required
+                     // resources
+                // get capable servers
+                ServerInfo[] capServers = getServersData(in, out, "capable");
+
+                // find a capable server with the lowest estimated waiting time
+                int index = 0;
+                int currentEstWait = 0;
+                int minWait = 1000000000;
+                int scheduleTo = 0;
+
+                // iterate through capable servers
+                do {
+                    // get estimated wait time for server
+                    sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
+
+                    rply = receiveMessage(in);
+
+                    currentEstWait = Integer.valueOf(rply);
+
+                    // check if estimated wait time is less than current minimum
+                    if (currentEstWait < minWait) {
+                        minWait = currentEstWait;
+                        scheduleTo = index;
+                    }
+
+                    index++;
+                } while (index < capServers.length);
+
+                // send scheduling message
+                sendMessage("SCHD " + currentJob.id + " " + capServers[scheduleTo].type + " "
+                            + capServers[scheduleTo].id, out);
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    /**** EXTRA ALGORITHMS (NOT USED FOR PROJECT) ****/
+
     // schedules jobs according to a largest round robin algorithm
     private static void scheduleJobLrr(DataOutputStream out) {
         try {
@@ -208,67 +264,6 @@ public class Client {
 
             // send scheduling request
             sendMessage("SCHD " + currentJob.id + " " + capableInfo.type + " " + capableInfo.id, out);
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    // schedules jobs according to a custom algorithm
-    private static void scheduleJobCustom(BufferedReader in, DataOutputStream out) {
-        try {
-            String rply;
-
-            // check for servers with necessary resources currently available
-            ServerInfo[] availServers = getServersData(in, out, "available");
-
-            // if there are servers with the required resources available, schedule to the
-            // first one
-            if (availServers != null) {
-                // send scheduling request
-                sendMessage("SCHD " + currentJob.id + " " + availServers[0].type + " " + availServers[0].id, out);
-            } else { // otherwise fall back to the servers that can eventually provide the required
-                     // resources
-                // get capable servers
-                ServerInfo[] capServers = getServersData(in, out, "capable");
-
-                // find the first capable server with an estimated runtime under the threshold
-                int index = 0;
-                int currentEstWait = 0;
-                int minWait = 1000000000;
-                int scheduleTo = 0;
-
-                do {
-                    // get estimated wait time for server
-                    sendMessage("EJWT " + capServers[index].type + " " + capServers[index].id, out);
-
-                    rply = receiveMessage(in);
-
-                    currentEstWait = Integer.valueOf(rply);
-
-                    if (currentEstWait < minWait) {
-                        minWait = currentEstWait;
-                        scheduleTo = index;
-                    }
-
-                    index++;
-                } while (index < capServers.length);
-
-                // decrement index by one as it is incremented regardless of whether loop will
-                // continue
-                index--;
-
-                sendMessage("SCHD " + currentJob.id + " " + capServers[scheduleTo].type + " "
-                            + capServers[scheduleTo].id, out);
-
-                // send scheduling request
-                /*if (scheduleTo == -1)
-                    sendMessage("SCHD " + currentJob.id + " " + capServers[index].type + " " + capServers[index].id,
-                            out);
-                else
-                    sendMessage("SCHD " + currentJob.id + " " + capServers[scheduleTo].type + " "
-                            + capServers[scheduleTo].id, out);*/
-            }
-
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -350,13 +345,6 @@ public class Client {
                 // check that server is capable of running job
                 if (servers[i].cores >= currentJob.reqCores && servers[i].memory >= currentJob.reqMem
                         && servers[i].disk >= currentJob.reqDisk) {
-                    /*
-                     * System.out.println("server matches with " + servers[i].cores + " " +
-                     * servers[i].memory + " "
-                     * + servers[i].disk + " against " + currentJob.reqCores + " " +
-                     * currentJob.reqMem + " "
-                     * + currentJob.reqDisk);
-                     */
                     currentWait = servers[i].estCompletionTimes.get(0);
                     // System.out.println("est wait time for server: " + currentWait);
                     if (currentWait < minWait) {
